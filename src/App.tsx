@@ -1,10 +1,12 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Welcome from "@/pages/Welcome";
 import Unlock from "@/pages/Unlock";
 import Vault from "@/pages/Vault";
 import type { VaultData } from "@/lib/types";
+import { loadVault, saveVault } from "@/lib/persist";
 
 type Screen = "welcome" | "unlock" | "vault";
+type SaveState = "idle" | "saving" | "saved" | "error";
 
 function createDemoVault(): VaultData {
   return {
@@ -30,30 +32,108 @@ function createDemoVault(): VaultData {
 }
 
 export default function App() {
-  const [screen, setScreen] = useState<Screen>("welcome");
-  const [vault, setVault] = useState<VaultData | null>(null);
-
   const appName = "Keynest";
 
-  const demoVault = useMemo(() => createDemoVault(), []);
+  const [screen, setScreen] = useState<Screen>("welcome");
+  const [vault, setVault] = useState<VaultData | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const saveTimer = useRef<number | null>(null);
+  const [saveState, setSaveState] = useState<SaveState>("idle");
+
+  useEffect(() => {
+    void (async () => {
+      try {
+        const existing = await loadVault();
+        if (existing) {
+          setVault(existing);
+          // TODO: later, go to unlock if encrypted
+          setScreen("vault");
+        } else {
+          setVault(null);
+          setScreen("welcome");
+        }
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
+
+  useEffect(() => {
+    if (!vault) return;
+    if (screen !== "vault") return;
+
+    setSaveState("saving");
+
+    if (saveTimer.current) window.clearTimeout(saveTimer.current);
+
+    saveTimer.current = window.setTimeout(() => {
+      void (async () => {
+        try {
+          await saveVault(vault);
+          setSaveState("saved");
+          window.setTimeout(() => setSaveState("idle"), 1200);
+        } catch {
+          setSaveState("error");
+        }
+      })();
+    }, 400);
+
+    return () => {
+      if (saveTimer.current) window.clearTimeout(saveTimer.current);
+    };
+  }, [vault, screen]);
+
+  useEffect(() => {
+    if (screen !== "vault") return;
+
+    let timer: number | null = null;
+
+    const reset = () => {
+      if (timer) window.clearTimeout(timer);
+      timer = window.setTimeout(() => {
+        setScreen("unlock");
+      }, 3 * 60 * 1000);
+    };
+
+    const events: (keyof WindowEventMap)[] = [
+      "mousemove",
+      "mousedown",
+      "keydown",
+      "touchstart",
+      "scroll",
+    ];
+
+    events.forEach((ev) =>
+      window.addEventListener(ev, reset, {
+        passive: true,
+      } as AddEventListenerOptions)
+    );
+    reset();
+
+    return () => {
+      if (timer) window.clearTimeout(timer);
+      events.forEach((ev) => window.removeEventListener(ev, reset));
+    };
+  }, [screen]);
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
 
     const handleChange = (e: MediaQueryListEvent | MediaQueryList) => {
-      if (e.matches) {
+      if ("matches" in e && e.matches) {
         document.documentElement.classList.add("dark");
       } else {
         document.documentElement.classList.remove("dark");
       }
     };
 
-    // Initial check
     handleChange(mediaQuery);
-
     mediaQuery.addEventListener("change", handleChange);
     return () => mediaQuery.removeEventListener("change", handleChange);
   }, []);
+
+  if (loading) return null;
 
   return (
     <>
@@ -61,10 +141,14 @@ export default function App() {
         <Welcome
           appName={appName}
           onCreate={() => {
-            setVault(demoVault);
+            const v = createDemoVault();
+            setVault(v);
             setScreen("vault");
           }}
-          onOpen={() => setScreen("unlock")}
+          onOpen={() => {
+            // TODO: show file picker to open existing vault
+            setScreen("vault");
+          }}
         />
       )}
 
@@ -72,9 +156,10 @@ export default function App() {
         <Unlock
           appName={appName}
           onBack={() => setScreen("welcome")}
-          onUnlock={() => {
-            // TODO: actually unlock with Rust
-            setVault(demoVault);
+          onUnlock={async () => {
+            // TODO: actually load and decrypt vault
+            const existing = await loadVault();
+            if (existing) setVault(existing);
             setScreen("vault");
           }}
         />
@@ -85,10 +170,11 @@ export default function App() {
           appName={appName}
           vault={vault}
           onLock={() => {
-            setVault(null);
+            // TODO: clear sensitive data from memory
             setScreen("unlock");
           }}
           onChange={setVault}
+          saveState={saveState}
         />
       )}
     </>
