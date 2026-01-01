@@ -1,0 +1,160 @@
+import { useEffect, useMemo, useState } from "react";
+import {
+  Button,
+  Input,
+  Label,
+  Modal,
+  TextArea,
+  TextField,
+} from "@heroui/react";
+import type { VaultEntry } from "@/lib/types";
+
+export function EntryModal({
+  isOpen,
+  entry,
+  onOpenChange,
+  onSave,
+  onDelete,
+}: {
+  isOpen: boolean;
+  entry: VaultEntry | null;
+  onOpenChange: (open: boolean) => void;
+  onSave: (next: VaultEntry) => void;
+  onDelete: (id: string) => void;
+}) {
+  const [title, setTitle] = useState("");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [notes, setNotes] = useState("");
+
+  const isNewish = useMemo(() => {
+    if (!entry) return false;
+    return (
+      entry.title === "New entry" &&
+      !entry.username &&
+      !entry.password &&
+      !entry.notes
+    );
+  }, [entry]);
+
+  useEffect(() => {
+    if (!isOpen || !entry) return;
+    setTitle(entry.title ?? "");
+    setUsername(entry.username ?? "");
+    setPassword(entry.password ?? "");
+    setNotes(entry.notes ?? "");
+  }, [isOpen, entry]);
+
+  const canSave = title.trim().length > 0;
+
+  return (
+    <Modal>
+      <Modal.Backdrop
+        isOpen={isOpen}
+        onOpenChange={onOpenChange}
+        variant="blur"
+      >
+        <Modal.Container size="md" placement="center" scroll="inside">
+          <Modal.Dialog>
+            {({ close }: { close: () => void }) => (
+              <>
+                <Modal.CloseTrigger />
+
+                <Modal.Header>
+                  <Modal.Heading>
+                    {isNewish ? "Create entry" : "Edit entry"}
+                  </Modal.Heading>
+                </Modal.Header>
+
+                <Modal.Body className="flex flex-col gap-4">
+                  <TextField isRequired>
+                    <Label>Title</Label>
+                    <Input
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value)}
+                      placeholder="e.g. GitHub"
+                      autoFocus
+                    />
+                  </TextField>
+
+                  <TextField>
+                    <Label>Username</Label>
+                    <Input
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                      placeholder="e.g. kevin@domain.com"
+                    />
+                  </TextField>
+
+                  <TextField>
+                    <Label>Password</Label>
+                    <Input
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="••••••••"
+                    />
+                  </TextField>
+
+                  <TextField>
+                    <Label>Notes</Label>
+                    <TextArea
+                      value={notes}
+                      onChange={(e) => setNotes(e.target.value)}
+                      placeholder="Optional notes…"
+                      rows={5}
+                    />
+                  </TextField>
+                </Modal.Body>
+
+                <Modal.Footer className="flex items-center justify-between gap-2">
+                  <div className="flex gap-2">
+                    <Button
+                      variant="secondary"
+                      slot="close"
+                      onPress={() => {
+                        // autoclose ????
+                      }}
+                    >
+                      Cancel
+                    </Button>
+
+                    {entry ? (
+                      <Button
+                        variant="danger"
+                        onPress={() => {
+                          onDelete(entry.id);
+                          close();
+                        }}
+                      >
+                        Delete
+                      </Button>
+                    ) : null}
+                  </div>
+
+                  <Button
+                    isDisabled={!entry || !canSave}
+                    onPress={() => {
+                      if (!entry) return;
+                      const now = Date.now();
+                      onSave({
+                        ...entry,
+                        title: title.trim(),
+                        username,
+                        password,
+                        notes,
+                        updatedAt: now,
+                      });
+                      close();
+                    }}
+                  >
+                    Save
+                  </Button>
+                </Modal.Footer>
+              </>
+            )}
+          </Modal.Dialog>
+        </Modal.Container>
+      </Modal.Backdrop>
+    </Modal>
+  );
+}
