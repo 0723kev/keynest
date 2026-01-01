@@ -1,35 +1,64 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useMemo, useState } from "react";
+import Welcome from "@/pages/Welcome";
+import Unlock from "@/pages/Unlock";
+import Vault from "@/pages/Vault";
+import type { VaultData } from "./lib/types";
 
-function App() {
-  const [count, setCount] = useState(0)
+type Screen = "welcome" | "unlock" | "vault";
+
+export default function App() {
+  const [screen, setScreen] = useState<Screen>("welcome");
+  const [vault, setVault] = useState<VaultData | null>(null);
+
+  const demoVault = useMemo<VaultData>(
+    () => ({
+      version: 1,
+      entries: [
+        {
+          id: "1",
+          title: "Slack",
+          username: "kev",
+          password: "fakepassword123",
+          notes: "Demo data only",
+          updatedAt: Date.now(),
+        },
+      ],
+    }),
+    []
+  );
 
   return (
     <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
-}
+      {screen === "welcome" && (
+        <Welcome
+          onCreate={() => {
+            setVault(demoVault);
+            setScreen("vault");
+          }}
+          onOpen={() => setScreen("unlock")}
+        />
+      )}
 
-export default App
+      {screen === "unlock" && (
+        <Unlock
+          onBack={() => setScreen("welcome")}
+          onUnlock={() => {
+            setVault(demoVault);
+            setScreen("vault");
+          }}
+        />
+      )}
+
+      {screen === "vault" && vault && (
+        <Vault
+          vault={vault}
+          onChange={setVault}
+          onLock={() => {
+            setVault(null);
+            setScreen("unlock");
+          }}
+        />
+      )}
+    </>
+  );
+}
