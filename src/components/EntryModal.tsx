@@ -6,6 +6,7 @@ import {
   Input,
   Label,
   Modal,
+  ScrollShadow,
   TextArea,
   TextField,
 } from "@heroui/react";
@@ -63,71 +64,70 @@ export function EntryModal({
               <>
                 <Modal.CloseTrigger />
 
-                <Modal.Header>
+                <Modal.Header className="pb-2">
                   <Modal.Heading>
                     {isNewish ? "Create entry" : "Edit entry"}
                   </Modal.Heading>
                 </Modal.Header>
 
-                <Modal.Body className="flex flex-col gap-4">
-                  <TextField isRequired>
-                    <Label>Title</Label>
-                    <Input
-                      value={title}
-                      onChange={(e) => setTitle(e.target.value)}
-                      placeholder="e.g. GitHub"
-                      autoFocus
-                    />
-                  </TextField>
-
-                  <TextField>
-                    <Label>Username</Label>
-                    <Input
-                      value={username}
-                      onChange={(e) => setUsername(e.target.value)}
-                      placeholder="e.g. kevin@domain.com"
-                    />
-                  </TextField>
-
-                  <TextField className="w-full">
-                    <Label>Password</Label>
-                    <ButtonGroup className="w-full">
+                <ScrollShadow hideScrollBar>
+                  <Modal.Body className="flex flex-col gap-4 p-1">
+                    <TextField isRequired>
+                      <Label>Title</Label>
                       <Input
-                        type={showPassword ? "text" : "password"}
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        placeholder="••••••••"
-                        className="font-mono rounded-tr-none rounded-br-none flex-1"
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
+                        placeholder="e.g. GitHub"
+                        autoFocus
                       />
-                      <Button
-                        isIconOnly
-                        variant="tertiary"
-                        onPress={() => setShowPassword(!showPassword)}
-                        aria-label={
-                          showPassword ? "Hide password" : "Show password"
-                        }
-                      >
-                        {showPassword ? (
-                          <EyeOff className="w-4 h-4" />
-                        ) : (
-                          <Eye className="w-4 h-4" />
-                        )}
-                      </Button>
-                    </ButtonGroup>
-                  </TextField>
+                    </TextField>
+                    <TextField>
+                      <Label>Username</Label>
+                      <Input
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                        placeholder="e.g. kevin@domain.com"
+                      />
+                    </TextField>
+                    <TextField className="w-full">
+                      <Label>Password</Label>
+                      <ButtonGroup className="w-full">
+                        <Input
+                          type={showPassword ? "text" : "password"}
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          placeholder="••••••••"
+                          className="font-mono rounded-tr-none rounded-br-none flex-1"
+                        />
+                        <Button
+                          isIconOnly
+                          variant="tertiary"
+                          onPress={() => setShowPassword(!showPassword)}
+                          aria-label={
+                            showPassword ? "Hide password" : "Show password"
+                          }
+                        >
+                          {showPassword ? (
+                            <EyeOff className="w-4 h-4" />
+                          ) : (
+                            <Eye className="w-4 h-4" />
+                          )}
+                        </Button>
+                      </ButtonGroup>
+                    </TextField>
+                    <TextField>
+                      <Label>Notes</Label>
+                      <TextArea
+                        value={notes}
+                        onChange={(e) => setNotes(e.target.value)}
+                        placeholder="Optional notes…"
+                        rows={5}
+                      />
+                    </TextField>
+                  </Modal.Body>
+                </ScrollShadow>
 
-                  <TextField>
-                    <Label>Notes</Label>
-                    <TextArea
-                      value={notes}
-                      onChange={(e) => setNotes(e.target.value)}
-                      placeholder="Optional notes…"
-                      rows={5}
-                    />
-                  </TextField>
-                </Modal.Body>
-
-                <Modal.Footer className="flex items-center justify-between gap-2">
+                <Modal.Footer className="mt-4 flex items-center justify-between gap-2">
                   <div className="flex gap-2">
                     <Button variant="secondary" slot="close">
                       Cancel

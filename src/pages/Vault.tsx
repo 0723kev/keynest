@@ -1,5 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
-import { AtSign, Lock, Plus, Pencil, Eye, EyeOff, Type } from "lucide-react";
+import {
+  Lock,
+  Plus,
+  Pencil,
+  Eye,
+  EyeOff,
+  Type,
+  ClipboardCopy,
+} from "lucide-react";
 import {
   Button,
   Card,
@@ -8,6 +16,9 @@ import {
   SearchField,
   Separator,
   ScrollShadow,
+  Input,
+  ButtonGroup,
+  TextArea,
 } from "@heroui/react";
 
 import type { VaultData, VaultEntry } from "@/lib/types";
@@ -198,70 +209,74 @@ export default function Vault({
                   className="hidden md:block h-full min-h-100"
                 />
 
-                <div className="min-w-0 h-full overflow-y-auto">
-                  {selectedEntry ? (
-                    <div className="space-y-6">
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="min-w-0 space-y-1">
-                          <h2 className="text-xl font-semibold truncate">
-                            {selectedEntry.title}
-                          </h2>
-                          <p className="text-sm text-muted-foreground truncate">
-                            {selectedEntry.username || "—"}
-                          </p>
-                        </div>
-                        <Button
-                          isIconOnly
-                          onPress={() => handleEdit(selectedEntry.id)}
-                          variant="secondary"
-                          size="sm"
-                        >
-                          <Pencil />
-                        </Button>
-                      </div>
-
-                      <div className="space-y-4">
-                        <div className="space-y-2">
-                          <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                            Username
-                          </Label>
-                          <div className="flex items-center gap-2">
-                            <div className="flex-1 bg-muted/20 rounded-lg border px-4 py-2 truncate text-sm font-mono">
+                <div className="min-h-0 flex flex-col h-full">
+                  <ScrollShadow
+                    className="h-full overflow-y-auto flex flex-col gap-2"
+                    hideScrollBar
+                  >
+                    {selectedEntry ? (
+                      <div className="space-y-6">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="min-w-0 space-y-1">
+                            <h2 className="text-xl font-semibold truncate">
+                              {selectedEntry.title}
+                            </h2>
+                            <p className="text-sm text-muted-foreground truncate">
                               {selectedEntry.username || "—"}
-                            </div>
-                            <Button
-                              isIconOnly
-                              variant="secondary"
-                              onPress={() =>
-                                copyWithAutoClear(
-                                  selectedEntry.username,
-                                  "username"
-                                )
-                              }
-                              isDisabled={!selectedEntry.username}
-                              className="shrink-0"
-                            >
-                              <AtSign className="w-4 h-4" />
-                            </Button>
+                            </p>
                           </div>
+                          <Button
+                            isIconOnly
+                            onPress={() => handleEdit(selectedEntry.id)}
+                            variant="secondary"
+                            size="sm"
+                          >
+                            <Pencil />
+                          </Button>
                         </div>
-
-                        <div className="space-y-2">
-                          <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                            Password
-                          </Label>
-                          <div className="flex items-center gap-2">
-                            <div className="flex-1 font-mono bg-muted/20 rounded-lg border px-4 py-2 flex items-center justify-between min-w-0 text-sm">
-                              <span className="truncate mr-2 font-mono">
-                                {showPassword
-                                  ? selectedEntry.password
-                                  : "••••••••"}
-                              </span>
-                              <div className="flex gap-1 shrink-0">
+                        <div className="space-y-4">
+                          <div className="space-y-2">
+                            <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                              Username
+                            </Label>
+                            <ButtonGroup className="flex items-center">
+                              <Input
+                                value={selectedEntry.username || "—"}
+                                className="focus:outline-none focus:ring-0 flex-1 rounded-r-none truncate text-sm font-mono"
+                              />
+                              <Button
+                                isIconOnly
+                                variant="secondary"
+                                onPress={() =>
+                                  copyWithAutoClear(
+                                    selectedEntry.username,
+                                    "username"
+                                  )
+                                }
+                                isDisabled={!selectedEntry.username}
+                                className="shrink-0"
+                              >
+                                <ClipboardCopy />
+                              </Button>
+                            </ButtonGroup>
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                              Password
+                            </Label>
+                            <div className="font-mono min-w-0 text-sm">
+                              <ButtonGroup className="flex items-center w-full">
+                                <Input
+                                  value={
+                                    showPassword
+                                      ? selectedEntry.password
+                                      : "••••••••"
+                                  }
+                                  className="focus:outline-none focus:ring-0 flex-1 rounded-r-none truncate text-sm font-mono"
+                                />
                                 <Button
                                   isIconOnly
-                                  variant="ghost"
-                                  size="sm"
+                                  variant="tertiary"
                                   onPress={() => setShowPassword(!showPassword)}
                                   aria-label={
                                     showPassword
@@ -277,51 +292,53 @@ export default function Vault({
                                 </Button>
                                 <Button
                                   isIconOnly
-                                  variant="ghost"
-                                  size="sm"
+                                  variant="tertiary"
                                   onPress={() => setIsLargeTypeOpen(true)}
                                   aria-label="Show in large type"
                                 >
                                   <Type className="w-4 h-4" />
                                 </Button>
-                              </div>
+                                <Button
+                                  variant="secondary"
+                                  onPress={() =>
+                                    copyWithAutoClear(
+                                      selectedEntry.password,
+                                      "password"
+                                    )
+                                  }
+                                  className="shrink-0"
+                                >
+                                  <ClipboardCopy />
+                                </Button>
+                              </ButtonGroup>
                             </div>
-                            <Button
-                              variant="secondary"
-                              onPress={() =>
-                                copyWithAutoClear(
-                                  selectedEntry.password,
-                                  "password"
-                                )
-                              }
-                              className="shrink-0"
-                            >
-                              Copy
-                            </Button>
                           </div>
                         </div>
+                        <div className="space-y-2">
+                          <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                            Notes
+                          </Label>
+                          {selectedEntry.notes ? (
+                            <TextArea
+                              fullWidth
+                              rows={5}
+                              isOnSurface
+                              value={selectedEntry.notes}
+                              className="focus:ring-0 flex text-sm font-mono text-foreground/90 "
+                            />
+                          ) : (
+                            <p className="text-sm text-muted-foreground italic">
+                              No notes.
+                            </p>
+                          )}
+                        </div>
                       </div>
-
-                      <div className="space-y-2">
-                        <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                          Notes
-                        </Label>
-                        {selectedEntry.notes ? (
-                          <div className="rounded-lg border bg-muted/20 p-4 text-sm font-mono text-foreground/90 whitespace-pre-wrap wrap-break-word">
-                            {selectedEntry.notes}
-                          </div>
-                        ) : (
-                          <p className="text-sm text-muted-foreground italic">
-                            No notes.
-                          </p>
-                        )}
+                    ) : (
+                      <div className="flex h-full items-center justify-center rounded-xl border border-dashed p-6 text-sm text-muted-foreground">
+                        Select an entry to view details.
                       </div>
-                    </div>
-                  ) : (
-                    <div className="flex h-full items-center justify-center rounded-xl border border-dashed p-6 text-sm text-muted-foreground">
-                      Select an entry to view details.
-                    </div>
-                  )}
+                    )}
+                  </ScrollShadow>
                 </div>
               </div>
             </Card.Content>
