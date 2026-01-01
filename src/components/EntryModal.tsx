@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Eye, EyeOff } from "lucide-react";
+import { ChevronUp, Eye, EyeOff, RotateCcwKey } from "lucide-react";
 import {
   Button,
   ButtonGroup,
@@ -11,6 +11,7 @@ import {
   TextField,
 } from "@heroui/react";
 import type { VaultEntry } from "@/lib/types";
+import PasswordGenerator from "./PasswordGenerator";
 
 export function EntryModal({
   isOpen,
@@ -30,6 +31,7 @@ export function EntryModal({
   const [password, setPassword] = useState("");
   const [notes, setNotes] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [expanded, setExpanded] = useState(false);
 
   const isNewish = useMemo(() => {
     if (!entry) return false;
@@ -113,7 +115,30 @@ export function EntryModal({
                             <Eye className="w-4 h-4" />
                           )}
                         </Button>
+                        <Button
+                          isIconOnly
+                          variant="primary"
+                          onPress={() => {
+                            setExpanded(!expanded);
+                          }}
+                          aria-label={
+                            expanded ? "Hide generator" : "Show generator"
+                          }
+                        >
+                          {expanded ? (
+                            <ChevronUp className="w-4 h-4" />
+                          ) : (
+                            <RotateCcwKey className="w-4 h-4" />
+                          )}
+                        </Button>
                       </ButtonGroup>
+                      <PasswordGenerator
+                        setPassword={(pw) => {
+                          setPassword(pw);
+                        }}
+                        expanded={expanded}
+                        setExpanded={setExpanded}
+                      />
                     </TextField>
                     <TextField>
                       <Label>Notes</Label>
