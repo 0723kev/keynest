@@ -4,6 +4,11 @@ export type VaultEntry = {
   username: string;
   password: string;
   notes?: string;
+
+  totpSecret?: string;
+  totpIssuer?: string;
+  totpAccount?: string;
+
   updatedAt: number;
 };
 
