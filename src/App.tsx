@@ -3,33 +3,16 @@ import Welcome from "@/pages/Welcome";
 import Unlock from "@/pages/Unlock";
 import Vault from "@/pages/Vault";
 import type { VaultData } from "@/lib/types";
-import { loadVault, saveVault } from "@/lib/persist";
+import {
+  vaultExists,
+  initVault,
+  unlockVault,
+  lockVault,
+  saveVault,
+} from "@/lib/persist";
 
 type Screen = "welcome" | "unlock" | "vault";
 type SaveState = "idle" | "saving" | "saved" | "error";
-
-function createDemoVault(): VaultData {
-  return {
-    version: 1,
-    entries: [
-      {
-        id: crypto.randomUUID(),
-        title: "Discord",
-        username: "user@example.com",
-        password: "demo-password",
-        notes: "Fake data only. Don't commit real secrets!!!!!!!!!!!",
-        updatedAt: Date.now(),
-      },
-      {
-        id: crypto.randomUUID(),
-        title: "GitHub",
-        username: "kevin",
-        password: "not-a-real-password",
-        updatedAt: Date.now(),
-      },
-    ],
-  };
-}
 
 export default function App() {
   const appName = "Keynest";
@@ -41,18 +24,14 @@ export default function App() {
   const saveTimer = useRef<number | null>(null);
   const [saveState, setSaveState] = useState<SaveState>("idle");
 
+  const [unlockError, setUnlockError] = useState<string | null>(null);
+  const [createError, setCreateError] = useState<string | null>(null);
+
   useEffect(() => {
     void (async () => {
       try {
-        const existing = await loadVault();
-        if (existing) {
-          setVault(existing);
-          // TODO: later, go to unlock if encrypted
-          setScreen("vault");
-        } else {
-          setVault(null);
-          setScreen("welcome");
-        }
+        const exists = await vaultExists();
+        setScreen(exists ? "unlock" : "welcome");
       } finally {
         setLoading(false);
       }
@@ -64,7 +43,6 @@ export default function App() {
     if (screen !== "vault") return;
 
     setSaveState("saving");
-
     if (saveTimer.current) window.clearTimeout(saveTimer.current);
 
     saveTimer.current = window.setTimeout(() => {
@@ -92,7 +70,14 @@ export default function App() {
     const reset = () => {
       if (timer) window.clearTimeout(timer);
       timer = window.setTimeout(() => {
-        setScreen("unlock");
+        void (async () => {
+          try {
+            await lockVault();
+          } finally {
+            setVault(null);
+            setScreen("unlock");
+          }
+        })();
       }, 3 * 60 * 1000);
     };
 
@@ -119,13 +104,10 @@ export default function App() {
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-
     const handleChange = (e: MediaQueryListEvent | MediaQueryList) => {
-      if ("matches" in e && e.matches) {
-        document.documentElement.classList.add("dark");
-      } else {
-        document.documentElement.classList.remove("dark");
-      }
+      const matches =
+        "matches" in e ? e.matches : (e as MediaQueryList).matches;
+      document.documentElement.classList.toggle("dark", matches);
     };
 
     handleChange(mediaQuery);
@@ -140,14 +122,27 @@ export default function App() {
       {screen === "welcome" && (
         <Welcome
           appName={appName}
-          onCreate={() => {
-            const v = createDemoVault();
-            setVault(v);
-            setScreen("vault");
+          error={createError ?? undefined}
+          onCreate={async (masterPassword: string) => {
+            setCreateError(null);
+            try {
+              await initVault(masterPassword);
+              const v = await unlockVault(masterPassword);
+              setVault(v);
+              setScreen("vault");
+            } catch (e) {
+              setCreateError(
+                typeof e === "string"
+                  ? e
+                  : e instanceof Error
+                  ? e.message
+                  : "Could not create vault."
+              );
+            }
           }}
-          onOpen={() => {
-            // TODO: show file picker to open existing vault
-            setScreen("vault");
+          onOpen={async () => {
+            const exists = await vaultExists();
+            setScreen(exists ? "unlock" : "welcome");
           }}
         />
       )}
@@ -155,12 +150,27 @@ export default function App() {
       {screen === "unlock" && (
         <Unlock
           appName={appName}
-          onBack={() => setScreen("welcome")}
-          onUnlock={async () => {
-            // TODO: actually load and decrypt vault
-            const existing = await loadVault();
-            if (existing) setVault(existing);
-            setScreen("vault");
+          error={unlockError ?? undefined}
+          onBack={async () => {
+            const exists = await vaultExists();
+            setUnlockError(null);
+            setScreen(exists ? "unlock" : "welcome");
+          }}
+          onUnlock={async (masterPassword: string) => {
+            setUnlockError(null);
+            try {
+              const v = await unlockVault(masterPassword);
+              setVault(v);
+              setScreen("vault");
+            } catch (e) {
+              setUnlockError(
+                typeof e === "string"
+                  ? e
+                  : e instanceof Error
+                  ? e.message
+                  : "Wrong password."
+              );
+            }
           }}
         />
       )}
@@ -169,9 +179,13 @@ export default function App() {
         <Vault
           appName={appName}
           vault={vault}
-          onLock={() => {
-            // TODO: clear sensitive data from memory
-            setScreen("unlock");
+          onLock={async () => {
+            try {
+              await lockVault();
+            } finally {
+              setVault(null);
+              setScreen("unlock");
+            }
           }}
           onChange={setVault}
           saveState={saveState}
