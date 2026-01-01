@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
 import {
   Button,
+  ButtonGroup,
   Input,
   Label,
   Modal,
@@ -26,6 +28,7 @@ export function EntryModal({
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [notes, setNotes] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const isNewish = useMemo(() => {
     if (!entry) return false;
@@ -86,13 +89,31 @@ export function EntryModal({
                     />
                   </TextField>
 
-                  <TextField>
+                  <TextField className="w-full">
                     <Label>Password</Label>
-                    <Input
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      placeholder="••••••••"
-                    />
+                    <ButtonGroup className="w-full">
+                      <Input
+                        type={showPassword ? "text" : "password"}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="••••••••"
+                        className="font-mono rounded-tr-none rounded-br-none flex-1"
+                      />
+                      <Button
+                        isIconOnly
+                        variant="tertiary"
+                        onPress={() => setShowPassword(!showPassword)}
+                        aria-label={
+                          showPassword ? "Hide password" : "Show password"
+                        }
+                      >
+                        {showPassword ? (
+                          <EyeOff className="w-4 h-4" />
+                        ) : (
+                          <Eye className="w-4 h-4" />
+                        )}
+                      </Button>
+                    </ButtonGroup>
                   </TextField>
 
                   <TextField>
@@ -108,13 +129,7 @@ export function EntryModal({
 
                 <Modal.Footer className="flex items-center justify-between gap-2">
                   <div className="flex gap-2">
-                    <Button
-                      variant="secondary"
-                      slot="close"
-                      onPress={() => {
-                        // autoclose ????
-                      }}
-                    >
+                    <Button variant="secondary" slot="close">
                       Cancel
                     </Button>
 

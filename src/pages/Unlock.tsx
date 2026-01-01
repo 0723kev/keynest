@@ -12,13 +12,14 @@ export default function Unlock({
   appName,
   onBack,
   onUnlock,
+  error,
 }: {
   appName: string;
-  onBack: () => void;
-  onUnlock: (masterPassword: string) => void;
+  onBack: () => void | Promise<void>;
+  onUnlock: (masterPassword: string) => void | Promise<void>;
+  error?: string;
 }) {
   const [pw, setPw] = useState("");
-  const [error, setError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
   const ref = useRef<HTMLInputElement>(null);
 
@@ -30,14 +31,9 @@ export default function Unlock({
 
   async function handleUnlock() {
     if (!pw) return;
-    setError(null);
     setIsPending(true);
-
     try {
-      // TODO: actually verify with Rust
-      onUnlock(pw);
-    } catch {
-      setError("Incorrect master password");
+      await onUnlock(pw);
     } finally {
       setIsPending(false);
     }
