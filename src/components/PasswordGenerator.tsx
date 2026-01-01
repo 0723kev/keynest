@@ -12,7 +12,6 @@ import {
   ButtonGroup,
 } from "@heroui/react";
 import { generatePassword } from "@/utils/password";
-import { RotateCcwKey } from "lucide-react";
 
 export default function PasswordGenerator({
   setPassword,
