@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { ChevronUp, Eye, EyeOff, RotateCcwKey } from "lucide-react";
+import { ChevronDown, Eye, EyeOff, RotateCcwKey, TagIcon } from "lucide-react";
 import {
   Button,
   ButtonGroup,
@@ -7,11 +7,15 @@ import {
   Label,
   Modal,
   ScrollShadow,
+  TagGroup,
+  Tag,
   TextArea,
   TextField,
+  Disclosure,
 } from "@heroui/react";
 import type { VaultEntry } from "@/lib/types";
 import PasswordGenerator from "./PasswordGenerator";
+import { addTagsFromInput, removeTag } from "@/utils/tags.ts";
 
 export function EntryModal({
   isOpen,
@@ -33,6 +37,14 @@ export function EntryModal({
   const [showPassword, setShowPassword] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [totpSecret, setTotpSecret] = useState("");
+  const [tags, setTags] = useState<string[]>([]);
+  const [tagDraft, setTagDraft] = useState("");
+  const [tagsOpen, setTagsOpen] = useState(false);
+
+  useEffect(() => {
+    if (!entry) return;
+    setTags(entry.tags ?? []);
+  }, [entry]);
 
   useEffect(() => {
     if (!isOpen || !entry) return;
@@ -80,15 +92,83 @@ export function EntryModal({
 
                 <ScrollShadow hideScrollBar>
                   <Modal.Body className="flex flex-col gap-4 p-1">
-                    <TextField isRequired>
+                    <TextField isRequired className="w-full">
                       <Label>Title</Label>
-                      <Input
-                        value={title}
-                        onChange={(e) => setTitle(e.target.value)}
-                        placeholder="e.g. GitHub"
-                        autoFocus
-                      />
+                      <ButtonGroup className="w-full">
+                        <Input
+                          className="rounded-r-none flex-1"
+                          value={title}
+                          onChange={(e) => setTitle(e.target.value)}
+                          placeholder="e.g. GitHub"
+                          autoFocus
+                        />
+                        <Button
+                          onPress={() => setTagsOpen(!tagsOpen)}
+                          variant="tertiary"
+                          aria-expanded={tagsOpen}
+                          aria-controls="tags-input"
+                        >
+                          <span
+                            className={`transition-transform duration-200 ${
+                              tagsOpen ? "rotate-180" : ""
+                            }`}
+                          >
+                            {tagsOpen ? <ChevronDown /> : <TagIcon />}
+                          </span>
+                        </Button>
+                      </ButtonGroup>
+                      <div className="flex items-start justify-between gap-4">
+                        <TagGroup className="flex-1 min-w-0">
+                          <TagGroup.List className="flex flex-wrap">
+                            {tags.map((tag) => (
+                              <Tag key={tag} id={tag} textValue={tag}>
+                                {() => (
+                                  <>
+                                    {tag}
+                                    <Tag.RemoveButton
+                                      onPress={() =>
+                                        setTags((prev) => removeTag(prev, tag))
+                                      }
+                                    />
+                                  </>
+                                )}
+                              </Tag>
+                            ))}
+                          </TagGroup.List>
+                        </TagGroup>
+                        <Disclosure
+                          className="shrink"
+                          isExpanded={tagsOpen}
+                          onExpandedChange={setTagsOpen}
+                        >
+                          <Disclosure.Content>
+                            <Input
+                              value={tagDraft}
+                              onChange={(e) => setTagDraft(e.target.value)}
+                              placeholder="Type a tag, and hit enter.."
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                  e.preventDefault();
+                                  setTags((prev) =>
+                                    addTagsFromInput(prev, tagDraft)
+                                  );
+                                  setTagDraft("");
+                                }
+                              }}
+                              onBlur={() => {
+                                if (tagDraft.trim()) {
+                                  setTags((prev) =>
+                                    addTagsFromInput(prev, tagDraft)
+                                  );
+                                  setTagDraft("");
+                                }
+                              }}
+                            />
+                          </Disclosure.Content>
+                        </Disclosure>
+                      </div>
                     </TextField>
+
                     <TextField>
                       <Label>Username</Label>
                       <Input
@@ -131,11 +211,17 @@ export function EntryModal({
                             expanded ? "Hide generator" : "Show generator"
                           }
                         >
-                          {expanded ? (
-                            <ChevronUp className="w-4 h-4" />
-                          ) : (
-                            <RotateCcwKey className="w-4 h-4" />
-                          )}
+                          <span
+                            className={`transition-transform duration-200 ${
+                              expanded ? "rotate-180" : ""
+                            }`}
+                          >
+                            {expanded ? (
+                              <ChevronDown className="w-4 h-4" />
+                            ) : (
+                              <RotateCcwKey className="w-4 h-4" />
+                            )}
+                          </span>
                         </Button>
                       </ButtonGroup>
                       <PasswordGenerator
@@ -200,6 +286,7 @@ export function EntryModal({
                         totpSecret: totpSecret.trim()
                           ? totpSecret.trim()
                           : undefined,
+                        tags,
                         updatedAt: now,
                       });
                       close();

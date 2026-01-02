@@ -26,6 +26,7 @@ struct VaultEntry {
     #[serde(rename = "totpAccount")]
     totp_account: Option<String>,
 
+    tags: Option<Vec<String>>,
     notes: Option<String>,
 
     #[serde(rename = "updatedAt")]

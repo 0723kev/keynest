@@ -4,6 +4,7 @@ export type VaultEntry = {
   username: string;
   password: string;
   notes?: string;
+  tags?: string[];
 
   totpSecret?: string;
   totpIssuer?: string;

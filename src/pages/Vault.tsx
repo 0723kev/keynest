@@ -19,6 +19,9 @@ import {
   Input,
   ButtonGroup,
   TextArea,
+  TagGroup,
+  Tag,
+  type Key,
 } from "@heroui/react";
 
 import type { VaultData, VaultEntry } from "@/lib/types";
@@ -50,6 +53,7 @@ export default function Vault({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [isLargeTypeOpen, setIsLargeTypeOpen] = useState(false);
+  const [selectedTags, setSelectedTags] = useState<Iterable<Key>>(new Set());
 
   const { toast, copyWithAutoClear } = useSecureClipboard();
 
@@ -58,19 +62,48 @@ export default function Vault({
     setIsLargeTypeOpen(false);
   }, [selectedId]);
 
+  const allTags = useMemo(() => {
+    const set = new Set<string>();
+    vault.entries.forEach((entry) =>
+      entry.tags?.forEach((tag) => set.add(tag))
+    );
+    return [...set].sort();
+  }, [vault.entries]);
+
+  const selectedTagSet: Set<string> = useMemo(() => {
+    return new Set(Array.from(selectedTags) as string[]);
+  }, [selectedTags]);
+
   const filtered = useMemo(() => {
-    const s = queue.trim().toLowerCase();
-    if (!s) return vault.entries;
+    const query = queue.trim().toLowerCase();
+    const hasQuery = query.length > 0;
+
+    const hasTagFilter = selectedTagSet.size > 0;
+
+    const tagMode: "any" | "all" = "any";
 
     return vault.entries.filter((entry) => {
       const notes = (entry.notes ?? "").toLowerCase();
-      return (
-        entry.title.toLowerCase().includes(s) ||
-        entry.username.toLowerCase().includes(s) ||
-        notes.includes(s)
-      );
+      const title = entry.title.toLowerCase();
+      const username = entry.username.toLowerCase();
+
+      const tags = (entry.tags ?? []).map((tag) => tag.toLowerCase());
+      const searchHit =
+        !hasQuery ||
+        title.includes(query) ||
+        username.includes(query) ||
+        notes.includes(query);
+      tags.some((tag) => tag.includes(query));
+
+      if (!searchHit) return false;
+      if (!hasTagFilter) return true;
+
+      if (tagMode === "any")
+        return Array.from(selectedTagSet).some((tag) => tags.includes(tag));
+
+      return Array.from(selectedTagSet).every((tag) => tags.includes(tag));
     });
-  }, [queue, vault.entries]);
+  }, [queue, vault.entries, selectedTagSet]);
 
   const selectedEntry = useMemo(
     () => vault.entries.find((entry) => entry.id === selectedId) ?? null,
@@ -181,6 +214,19 @@ export default function Vault({
                   <SearchField.Input placeholder="Title, username, notes…" />
                   <SearchField.ClearButton />
                 </SearchField.Group>
+                <TagGroup
+                  selectedKeys={selectedTags}
+                  selectionMode="multiple"
+                  onSelectionChange={setSelectedTags}
+                >
+                  <TagGroup.List>
+                    {allTags.map((tag) => (
+                      <Tag key={tag} id={tag}>
+                        {tag}
+                      </Tag>
+                    ))}
+                  </TagGroup.List>
+                </TagGroup>
               </SearchField>
 
               <div className="grid gap-6 md:grid-cols-[1fr_auto_1fr] h-96">
@@ -211,10 +257,7 @@ export default function Vault({
                 />
 
                 <div className="min-h-0 flex flex-col h-full">
-                  <ScrollShadow
-                    className="h-full overflow-y-auto flex flex-col gap-2"
-                    hideScrollBar
-                  >
+                  <ScrollShadow className="h-full overflow-y-auto flex flex-col gap-2">
                     {selectedEntry ? (
                       <div className="space-y-6">
                         <div className="flex items-start justify-between gap-4">
@@ -222,9 +265,24 @@ export default function Vault({
                             <h2 className="text-xl font-semibold truncate">
                               {selectedEntry.title}
                             </h2>
-                            <p className="text-sm text-muted-foreground truncate">
-                              {selectedEntry.username || "—"}
-                            </p>
+                            {selectedEntry.tags &&
+                            selectedEntry.tags.length > 0 ? (
+                              <div className="flex flex-wrap gap-2">
+                                <TagGroup>
+                                  <TagGroup.List>
+                                    {selectedEntry.tags.map((tag) => (
+                                      <Tag
+                                        key={tag}
+                                        id={tag}
+                                        className="hover:cursor-default"
+                                      >
+                                        {tag}
+                                      </Tag>
+                                    ))}
+                                  </TagGroup.List>
+                                </TagGroup>
+                              </div>
+                            ) : null}
                           </div>
                           <Button
                             isIconOnly
@@ -490,7 +548,7 @@ function EntryRow({
         >
           {entry.title}
         </div>
-        <div className="text-xs text-muted-foreground truncate">
+        <div className="text-xs text-muted-foreground truncate font-mono">
           {entry.username || "—"}
         </div>
       </div>
