@@ -32,6 +32,12 @@ export function EntryModal({
   const [notes, setNotes] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [expanded, setExpanded] = useState(false);
+  const [totpSecret, setTotpSecret] = useState("");
+
+  useEffect(() => {
+    if (!isOpen || !entry) return;
+    setTotpSecret(entry.totpSecret ?? "");
+  }, [isOpen, entry]);
 
   const isNewish = useMemo(() => {
     if (!entry) return false;
@@ -141,6 +147,15 @@ export function EntryModal({
                       />
                     </TextField>
                     <TextField>
+                      <Label>2FA secret (Base32)</Label>
+                      <Input
+                        value={totpSecret}
+                        onChange={(e) => setTotpSecret(e.target.value)}
+                        placeholder="e.g. JBSWY3DPEHPK3PXP"
+                      />
+                    </TextField>
+
+                    <TextField>
                       <Label>Notes</Label>
                       <TextArea
                         value={notes}
@@ -182,6 +197,9 @@ export function EntryModal({
                         username,
                         password,
                         notes,
+                        totpSecret: totpSecret.trim()
+                          ? totpSecret.trim()
+                          : undefined,
                         updatedAt: now,
                       });
                       close();

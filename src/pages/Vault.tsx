@@ -24,6 +24,7 @@ import {
 import type { VaultData, VaultEntry } from "@/lib/types";
 import { EntryModal } from "@/components/EntryModal";
 import { useSecureClipboard } from "@/utils/copy";
+import TotpCard from "@/components/TotpCard.tsx";
 
 // TODO: define interface in diff file
 interface VaultProps {
@@ -314,6 +315,20 @@ export default function Vault({
                             </div>
                           </div>
                         </div>
+                        {selectedEntry?.totpSecret ? (
+                          <div className="space-y-2">
+                            <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                              2FA code
+                            </Label>
+                            <TotpCard
+                              secret={selectedEntry.totpSecret}
+                              issuer={selectedEntry.totpIssuer}
+                              account={selectedEntry.totpAccount}
+                              onCopy={copyWithAutoClear}
+                            />
+                          </div>
+                        ) : null}
+
                         <div className="space-y-2">
                           <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                             Notes

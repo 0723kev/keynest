@@ -16,6 +16,16 @@ struct VaultEntry {
     title: String,
     username: String,
     password: String,
+
+    #[serde(rename = "totpSecret")]
+    totp_secret: Option<String>,
+
+    #[serde(rename = "totpIssuer")]
+    totp_issuer: Option<String>,
+
+    #[serde(rename = "totpAccount")]
+    totp_account: Option<String>,
+
     notes: Option<String>,
 
     #[serde(rename = "updatedAt")]
