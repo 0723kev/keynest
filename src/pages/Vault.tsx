@@ -472,7 +472,7 @@ function LargeTypeModal({
       >
         <Modal.Container size="full" placement="center">
           <Modal.Dialog className="bg-zinc-950 border-none shadow-none h-full w-full">
-            {({ close }: { close: () => void }) => (
+            {({}: { close: () => void }) => (
               <>
                 <Modal.CloseTrigger className="z-50 top-6 right-6" />
                 <Modal.Body className="flex h-full w-full items-center justify-center p-8 overflow-y-auto">
