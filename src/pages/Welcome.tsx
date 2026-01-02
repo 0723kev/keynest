@@ -11,6 +11,7 @@ import {
 export default function Welcome({
   appName,
   onCreate,
+  // @ts-ignore
   onOpen,
   error,
 }: {
@@ -107,7 +108,7 @@ export default function Welcome({
             </Button>
 
             {/* TODO: implement this */}
-            <Button
+            {/* <Button
               fullWidth
               size="lg"
               variant="secondary"
@@ -115,12 +116,12 @@ export default function Welcome({
               isDisabled={isPending}
             >
               Open existing vault
-            </Button>
+            </Button> */}
           </div>
 
-          <p className="pt-2 text-xs text-muted">
-            USE FAKE CREDENTIALS. NOT real secrets!!!!!!!!!!! Well until crypto
-            and ts are done at least
+          <p className="text-xs text-muted">
+            Losing this password means losing access to your vault, forever.
+            There is no recovery option. Be sure to remember it!
           </p>
         </Card.Content>
       </Card>

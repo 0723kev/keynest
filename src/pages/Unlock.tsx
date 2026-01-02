@@ -10,6 +10,7 @@ import {
 
 export default function Unlock({
   appName,
+  // @ts-ignore
   onBack,
   onUnlock,
   error,
@@ -64,9 +65,10 @@ export default function Unlock({
           </TextField>
 
           <div className="flex gap-3">
-            <Button variant="tertiary" onPress={onBack} isDisabled={isPending}>
+            {/* TODO: implement multi-vault access */}
+            {/* <Button variant="tertiary" onPress={onBack} isDisabled={isPending}>
               Back
-            </Button>
+            </Button> */}
             <Button
               onPress={handleUnlock}
               isDisabled={!canUnlock}
