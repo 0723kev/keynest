@@ -7,6 +7,7 @@ import {
   EyeOff,
   Type,
   ClipboardCopy,
+  FileHeart,
 } from "lucide-react";
 import {
   Button,
@@ -24,6 +25,7 @@ import {
   type Key,
 } from "@heroui/react";
 
+import type { Screen } from "@/App";
 import type { VaultData, VaultEntry } from "@/lib/types";
 import { EntryModal } from "@/components/EntryModal";
 import { useSecureClipboard } from "@/utils/copy";
@@ -36,6 +38,9 @@ interface VaultProps {
   saveState?: "idle" | "saving" | "saved" | "error";
   onLock: () => void;
   onChange: (next: VaultData) => void;
+  setScreen: (screen: Screen) => void;
+  selectedId: string | null;
+  setSelectedId: (id: string | null) => void;
 }
 
 export default function Vault({
@@ -44,11 +49,14 @@ export default function Vault({
   saveState = "idle",
   onLock,
   onChange,
+  setScreen,
+  selectedId,
+  setSelectedId,
 }: VaultProps) {
   const [queue, setQueue] = useState("");
-  const [selectedId, setSelectedId] = useState<string | null>(
-    vault.entries[0]?.id ?? null
-  );
+  // const [selectedId, setSelectedId] = useState<string | null>(
+  //   vault.entries[0]?.id ?? null
+  // );
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
@@ -189,6 +197,9 @@ export default function Vault({
             </div>
 
             <div className="flex gap-2">
+              <Button variant="tertiary" onPress={() => setScreen("health")}>
+                <FileHeart /> Health Report
+              </Button>
               <Button variant="primary" onPress={handleAdd}>
                 <Plus />
                 Add

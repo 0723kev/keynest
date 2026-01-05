@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import Welcome from "@/pages/Welcome";
 import Unlock from "@/pages/Unlock";
 import Vault from "@/pages/Vault";
+import VaultHealth from "./pages/VaultHealth";
 import type { VaultData } from "@/lib/types";
 import {
   vaultExists,
@@ -11,7 +12,7 @@ import {
   saveVault,
 } from "@/lib/persist";
 
-type Screen = "welcome" | "unlock" | "vault";
+export type Screen = "welcome" | "unlock" | "vault" | "health";
 type SaveState = "idle" | "saving" | "saved" | "error";
 
 export default function App() {
@@ -20,6 +21,9 @@ export default function App() {
   const [screen, setScreen] = useState<Screen>("welcome");
   const [vault, setVault] = useState<VaultData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [selectedEntryId, setSelectedEntryId] = useState<string | null>(
+    vault ? vault.entries[0]?.id ?? null : null
+  );
 
   const saveTimer = useRef<number | null>(null);
   const [saveState, setSaveState] = useState<SaveState>("idle");
@@ -187,8 +191,22 @@ export default function App() {
               setScreen("unlock");
             }
           }}
+          setScreen={setScreen}
           onChange={setVault}
           saveState={saveState}
+          selectedId={selectedEntryId}
+          setSelectedId={setSelectedEntryId}
+        />
+      )}
+
+      {screen === "health" && vault && (
+        <VaultHealth
+          vault={vault}
+          onBack={() => setScreen("vault")}
+          onOpenEntry={(entryId: string) => {
+            setSelectedEntryId(entryId);
+            setScreen("vault");
+          }}
         />
       )}
     </>
