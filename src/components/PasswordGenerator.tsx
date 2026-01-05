@@ -97,7 +97,7 @@ export default function PasswordGenerator({
                   }}
                 />
               </div>
-              <p className="text-xs text-muted-foreground">{strengthLabel}</p>
+              <p className="text-xs text-zinc-500">{strengthLabel}</p>
             </div>
           ) : null}
           <div className="space-y-2">

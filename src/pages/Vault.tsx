@@ -181,12 +181,10 @@ export default function Vault({
                 {appName}
               </h1>
               <div className="flex items-center gap-3">
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-zinc-500">
                   {vault.entries.length} entries
                 </p>
-                <p className="text-xs text-muted-foreground">
-                  {renderSaveStatus()}
-                </p>
+                <p className="text-xs text-zinc-500">{renderSaveStatus()}</p>
               </div>
             </div>
 
@@ -235,7 +233,7 @@ export default function Vault({
                   className="h-full overflow-y-auto flex flex-col gap-2"
                 >
                   {filtered.length === 0 ? (
-                    <div className="h-full rounded-xl border border-dashed p-8 grid place-items-center text-center text-sm text-muted-foreground">
+                    <div className="h-full rounded-xl border border-dashed p-8 grid place-items-center text-center text-sm text-zinc-500">
                       No matches found.
                     </div>
                   ) : (
@@ -295,7 +293,7 @@ export default function Vault({
                         </div>
                         <div className="space-y-4">
                           <div className="space-y-2">
-                            <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                            <Label className="text-xs font-medium text-zinc-500 uppercase tracking-wider">
                               Username
                             </Label>
                             <ButtonGroup className="flex items-center">
@@ -320,7 +318,7 @@ export default function Vault({
                             </ButtonGroup>
                           </div>
                           <div className="space-y-2">
-                            <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                            <Label className="text-xs font-medium text-zinc-500 uppercase tracking-wider">
                               Password
                             </Label>
                             <div className="font-mono min-w-0 text-sm">
@@ -375,7 +373,7 @@ export default function Vault({
                         </div>
                         {selectedEntry?.totpSecret ? (
                           <div className="space-y-2">
-                            <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                            <Label className="text-xs font-medium text-zinc-500 uppercase tracking-wider">
                               2FA code
                             </Label>
                             <TotpCard
@@ -388,7 +386,7 @@ export default function Vault({
                         ) : null}
 
                         <div className="space-y-2">
-                          <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                          <Label className="text-xs font-medium text-zinc-500 uppercase tracking-wider">
                             Notes
                           </Label>
                           {selectedEntry.notes ? (
@@ -400,14 +398,14 @@ export default function Vault({
                               className="focus:ring-0 flex text-sm font-mono text-foreground/90 "
                             />
                           ) : (
-                            <p className="text-sm text-muted-foreground italic">
+                            <p className="text-sm text-zinc-500 italic">
                               No notes.
                             </p>
                           )}
                         </div>
                       </div>
                     ) : (
-                      <div className="flex h-full items-center justify-center rounded-xl border border-dashed p-6 text-sm text-muted-foreground">
+                      <div className="flex h-full items-center justify-center rounded-xl border border-dashed p-6 text-sm text-zinc-500">
                         Select an entry to view details.
                       </div>
                     )}
@@ -548,7 +546,7 @@ function EntryRow({
         >
           {entry.title}
         </div>
-        <div className="text-xs text-muted-foreground truncate font-mono">
+        <div className="text-xs text-zinc-500 truncate font-mono">
           {entry.username || "—"}
         </div>
       </div>
