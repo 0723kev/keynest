@@ -26,7 +26,7 @@ import {
 } from "@heroui/react";
 
 import type { Screen } from "@/App";
-import type { VaultData, VaultEntry } from "@/lib/types";
+import type { VaultData, VaultEntry, VaultEntryHistoryItem } from "@/lib/types";
 import { EntryModal } from "@/components/EntryModal";
 import { useSecureClipboard } from "@/utils/copy";
 import TotpCard from "@/components/TotpCard.tsx";
@@ -127,6 +127,25 @@ export default function Vault({
   );
 
   function upsertEntry(nextEntry: VaultEntry) {
+    const currentEntry = vault.entries.find(
+      (entry) => entry.id === nextEntry.id
+    );
+
+    if (currentEntry) {
+      const historyItem: VaultEntryHistoryItem = {
+        title: currentEntry.title,
+        username: currentEntry.username,
+        password: currentEntry.password,
+        notes: currentEntry.notes,
+        tags: currentEntry.tags,
+        totpSecret: currentEntry.totpSecret,
+        updatedAt: currentEntry.updatedAt,
+      };
+
+      const previousHistory = currentEntry.history || [];
+      nextEntry.history = [historyItem, ...previousHistory].slice(0, 10);
+    }
+
     const exists = vault.entries.some((entry) => entry.id === nextEntry.id);
     const nextEntries = exists
       ? vault.entries.map((entry) =>

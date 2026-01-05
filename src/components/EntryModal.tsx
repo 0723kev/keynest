@@ -1,5 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
-import { ChevronDown, Eye, EyeOff, RotateCcwKey, TagIcon } from "lucide-react";
+import {
+  Check,
+  ChevronDown,
+  Clock,
+  Eye,
+  EyeOff,
+  RotateCcw,
+  RotateCcwKey,
+  TagIcon,
+  TriangleAlert,
+  X,
+} from "lucide-react";
 import {
   Button,
   ButtonGroup,
@@ -12,10 +23,12 @@ import {
   TextArea,
   TextField,
   Disclosure,
+  Accordion,
 } from "@heroui/react";
-import type { VaultEntry } from "@/lib/types";
+import type { VaultEntry, VaultEntryHistoryItem } from "@/lib/types";
 import PasswordGenerator from "./PasswordGenerator";
-import { addTagsFromInput, removeTag } from "@/utils/tags.ts";
+import { addTagsFromInput, removeTag } from "@/utils/tags";
+import { motion, AnimatePresence } from "framer-motion";
 
 export function EntryModal({
   isOpen,
@@ -40,6 +53,19 @@ export function EntryModal({
   const [tags, setTags] = useState<string[]>([]);
   const [tagDraft, setTagDraft] = useState("");
   const [tagsOpen, setTagsOpen] = useState(false);
+  const [confirmingRestore, setConfirmingRestore] = useState<{
+    index: number;
+    status: "idle" | "confirming" | "restoring";
+  } | null>(null);
+
+  const restoreHistory = (item: VaultEntryHistoryItem) => {
+    setTitle(item.title);
+    setUsername(item.username);
+    setPassword(item.password);
+    setNotes(item.notes ?? "");
+    setTotpSecret(item.totpSecret ?? "");
+    setTags(item.tags ?? []);
+  };
 
   useEffect(() => {
     if (!entry) return;
@@ -250,6 +276,172 @@ export function EntryModal({
                         rows={5}
                       />
                     </TextField>
+
+                    {entry?.history && entry.history.length > 0 && (
+                      <div className="border-t pt-4">
+                        <Label className="mb-2 flex items-center gap-2 text-sm font-medium">
+                          <Clock className="w-4 h-4" /> History (
+                          {entry.history.length})
+                        </Label>
+
+                        <div className="divide-y divide-accent-foreground/10">
+                          <Accordion className="flex flex-col gap-2">
+                            {entry?.history?.map((item, index) => (
+                              <Accordion.Item
+                                key={index}
+                                className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-lg overflow-hidden"
+                              >
+                                <Accordion.Heading>
+                                  <Accordion.Trigger className="flex w-full items-center justify-between p-3 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors group">
+                                    <div className="flex flex-col gap-2 text-left">
+                                      <p className="font-medium text-zinc-900 dark:text-zinc-100">
+                                        {new Date(
+                                          item.updatedAt
+                                        ).toLocaleString()}
+                                      </p>
+                                      <p className="text-zinc-500 text-sm truncate max-w-50">
+                                        {item.title} • {item.username}
+                                      </p>
+                                    </div>
+                                    <Accordion.Indicator className="text-zinc-400 group-hover:text-zinc-600 transition-transform duration-200 ease-out" />
+                                  </Accordion.Trigger>
+                                </Accordion.Heading>
+
+                                <Accordion.Panel>
+                                  <Accordion.Body>
+                                    <div className="p-3 border-t border-zinc-100 dark:border-zinc-800">
+                                      <div className="grid gap-1 text-sm text-zinc-600 dark:text-zinc-400 mb-4">
+                                        <DisplayField
+                                          header="Title"
+                                          value={item.title}
+                                        />
+                                        <DisplayField
+                                          header="Username"
+                                          value={item.username}
+                                        />
+                                        <DisplayField
+                                          header="Password"
+                                          value={item.password}
+                                        />
+                                        {item.notes && (
+                                          <DisplayField
+                                            header="Notes"
+                                            value={item.notes}
+                                          />
+                                        )}
+                                        {item.tags && (
+                                          <DisplayField
+                                            header="Tags"
+                                            value={item.tags.join(", ")}
+                                          />
+                                        )}
+                                        {item.totpSecret && (
+                                          <DisplayField
+                                            header="2FA Secret"
+                                            value={item.totpSecret}
+                                          />
+                                        )}
+                                      </div>
+
+                                      <div className="h-9 relative w-full">
+                                        <AnimatePresence
+                                          mode="popLayout"
+                                          initial={false}
+                                        >
+                                          {confirmingRestore?.index !==
+                                          index ? (
+                                            <motion.div
+                                              key="restore"
+                                              initial={{ opacity: 0, y: 5 }}
+                                              animate={{ opacity: 1, y: 0 }}
+                                              exit={{ opacity: 0, y: -5 }}
+                                              transition={{ duration: 0.15 }}
+                                              className="absolute left-0 top-0"
+                                            >
+                                              <Button
+                                                size="sm"
+                                                variant="primary"
+                                                onPress={() =>
+                                                  setConfirmingRestore({
+                                                    index,
+                                                    status: "confirming",
+                                                  })
+                                                }
+                                                className="flex items-center gap-2"
+                                              >
+                                                <RotateCcw className="w-3.5 h-3.5" />
+                                                Restore this version
+                                              </Button>
+                                            </motion.div>
+                                          ) : (
+                                            <motion.div
+                                              key="confirm"
+                                              initial={{ opacity: 0, y: 5 }}
+                                              animate={{ opacity: 1, y: 0 }}
+                                              exit={{ opacity: 0, y: -5 }}
+                                              transition={{ duration: 0.15 }}
+                                              className="absolute left-0 top-0"
+                                            >
+                                              {confirmingRestore?.status ===
+                                              "restoring" ? (
+                                                <Button
+                                                  size="sm"
+                                                  variant="primary"
+                                                  className="bg-success"
+                                                  isDisabled
+                                                >
+                                                  <Check className="w-3.5 h-3.5 mr-1" />
+                                                  Restored
+                                                </Button>
+                                              ) : (
+                                                <ButtonGroup>
+                                                  <Button
+                                                    size="sm"
+                                                    variant="danger-soft"
+                                                    className="cursor-default pointer-events-none"
+                                                  >
+                                                    <TriangleAlert className="w-3.5 h-3.5 mr-1" />
+                                                    Are you sure?
+                                                  </Button>
+                                                  <Button
+                                                    isIconOnly
+                                                    size="sm"
+                                                    variant="danger-soft"
+                                                    onPress={() => {
+                                                      setConfirmingRestore({
+                                                        index,
+                                                        status: "restoring",
+                                                      });
+                                                      restoreHistory(item);
+                                                    }}
+                                                  >
+                                                    <Check className="w-3.5 h-3.5" />
+                                                  </Button>
+                                                  <Button
+                                                    isIconOnly
+                                                    size="sm"
+                                                    variant="danger-soft"
+                                                    onPress={() =>
+                                                      setConfirmingRestore(null)
+                                                    }
+                                                  >
+                                                    <X className="w-3.5 h-3.5" />
+                                                  </Button>
+                                                </ButtonGroup>
+                                              )}
+                                            </motion.div>
+                                          )}
+                                        </AnimatePresence>
+                                      </div>
+                                    </div>
+                                  </Accordion.Body>
+                                </Accordion.Panel>
+                              </Accordion.Item>
+                            ))}
+                          </Accordion>
+                        </div>
+                      </div>
+                    )}
                   </Modal.Body>
                 </ScrollShadow>
 
@@ -301,5 +493,16 @@ export function EntryModal({
         </Modal.Container>
       </Modal.Backdrop>
     </Modal>
+  );
+}
+
+function DisplayField({ header, value }: { header: string; value: string }) {
+  return (
+    <div className="flex flex-col">
+      <span className="text-md font-medium text-zinc-700 dark:text-zinc-300">
+        {header}
+      </span>
+      <span className="font-mono break-all">{value}</span>
+    </div>
   );
 }

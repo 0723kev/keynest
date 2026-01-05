@@ -11,6 +11,22 @@ use tauri::Manager;
 use zeroize::{Zeroize, ZeroizeOnDrop, Zeroizing};
 
 #[derive(Debug, Serialize, Deserialize, Clone, Zeroize, ZeroizeOnDrop)]
+struct VaultEntryHistoryItem {
+    title: String,
+    username: String,
+    password: String,
+
+    #[serde(rename = "totpSecret")]
+    totp_secret: Option<String>,
+
+    tags: Option<Vec<String>>,
+    notes: Option<String>,
+
+    #[serde(rename = "updatedAt")]
+    updated_at: u64,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, Zeroize, ZeroizeOnDrop)]
 struct VaultEntry {
     id: String,
     title: String,
@@ -28,6 +44,8 @@ struct VaultEntry {
 
     tags: Option<Vec<String>>,
     notes: Option<String>,
+
+    history: Option<Vec<VaultEntryHistoryItem>>,
 
     #[serde(rename = "updatedAt")]
     updated_at: u64,
