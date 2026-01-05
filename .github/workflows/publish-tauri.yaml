@@ -56,8 +56,17 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tagName: app-v__VERSION__
-          releaseName: "App v__VERSION__"
-          releaseBody: "See the assets to download this version and install."
+          releaseName: "Keynest v__VERSION__"
+          # releaseBody: "See the assets to download this version and install."
+          releaseBody: |
+            **Full Changelog**: https://github.com/0723kev/keynest/compare/app-v__PREV_VERSION__...app-v__VERSION__
+
+            * 🪟 Windows → Download the .exe
+            * 🍎 macOS (M-series) → Apple Silicon DMG
+            * 🍎 macOS (Intel) → Intel DMG
+                > Note: to run on macOS, you will need to unquarantine the app by running `xattr -d com.apple.quarantine /Applications/keynest.app` in a terminal.
+            * 🐧 Linux → AppImage (recommended)
+
           releaseDraft: true
           prerelease: false
           args: ${{ matrix.args }}
