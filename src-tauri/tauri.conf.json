@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "keynest",
+        "title": "Keynest",
         "width": 1000,
         "height": 700,
         "resizable": true,
